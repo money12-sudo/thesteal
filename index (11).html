@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Parallax · Spatial appraisal infrastructure</title>
+<meta name="description" content="Parallax reconstructs every property in 3D and derives gross living area from measured space — auditable evidence a licensed appraiser signs. Spatial appraisal software for appraisers, plus QC and turn-key reports for lenders and AMCs." />
+<meta name="theme-color" content="#090D12" />
+<link rel="canonical" href="https://parallax.ai/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Parallax" />
+<meta property="og:title" content="Parallax · Value, measured in three dimensions" />
+<meta property="og:description" content="Appraisal that starts from the geometry. Parallax reconstructs every property in 3D and derives measured GLA a licensed appraiser can sign." />
+<meta property="og:url" content="https://parallax.ai/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Parallax · Spatial appraisal infrastructure" />
+<meta name="twitter:description" content="Measured GLA and volume from a 3D reconstruction — auditable evidence, UAD 3.6-native, signed by a licensed appraiser." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --ink:#090D12;
+  --ink-2:#0D131A;
+  --ink-3:#121C25;
+  --hair-dark:#1E2833;
+  --hair-dark-2:#2A3742;
+  --paper:#E6E9E4;
+  --paper-2:#F1F2ED;
+  --paper-card:#FBFBF7;
+  --grid:#CDD2C7;
+  --ink-on-paper:#0F1620;
+  --muted-paper:#586171;
+  --paper-on-ink:#E9EEF2;
+  --muted-ink:#7C8A99;
+  --muted-ink-2:#828F9D;
+  --signal:#F2501C;
+  --signal-2:#FF7345;
+  --scan:#63E0D2;
+  --scan-deep:#2AA597;
+  --maxw:1220px;
+  --pad:clamp(20px,5vw,64px);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--paper-on-ink);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+img,svg{display:block}
+::selection{background:var(--signal);color:#fff}
+
+.container{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
+
+/* ---------- type ---------- */
+.display{
+  font-family:'Archivo',sans-serif;
+  font-weight:800;
+  font-stretch:118%;
+  line-height:0.96;
+  letter-spacing:-0.02em;
+}
+h1,h2,h3{margin:0}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.7rem;
+  font-weight:500;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--muted-ink);
+  display:inline-flex;
+  align-items:center;
+  gap:0.6em;
+}
+.eyebrow .idx{color:var(--signal)}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:0.55em;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.82rem;letter-spacing:0.02em;font-weight:500;
+  padding:0.85em 1.25em;
+  background:var(--signal);color:#fff;
+  border:1px solid var(--signal);
+  border-radius:2px;
+  cursor:pointer;
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease;
+  will-change:transform;
+}
+.btn:hover{background:var(--signal-2);border-color:var(--signal-2);transform:translateY(-1px);box-shadow:0 8px 24px -12px var(--signal)}
+.btn .arw{transition:transform .18s ease}
+.btn:hover .arw{transform:translateX(3px)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:0.55em;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.82rem;letter-spacing:0.02em;font-weight:500;
+  padding:0.85em 1.15em;
+  background:transparent;
+  border:1px solid var(--hair-dark-2);
+  color:var(--paper-on-ink);
+  border-radius:2px;cursor:pointer;
+  transition:border-color .18s ease, color .18s ease;
+}
+.btn-ghost:hover{border-color:var(--paper-on-ink)}
+.btn-ghost.on-paper{border-color:#C4C9BE;color:var(--ink-on-paper)}
+.btn-ghost.on-paper:hover{border-color:var(--ink-on-paper)}
+.link-arw{
+  font-family:'IBM Plex Mono',monospace;font-size:0.84rem;font-weight:500;
+  color:var(--signal);display:inline-flex;align-items:center;gap:0.5em;
+}
+.link-arw .arw{transition:transform .18s ease}
+.link-arw:hover .arw{transform:translateX(4px)}
+
+/* ---------- nav ---------- */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px var(--pad);
+  transition:background .3s ease, border-color .3s ease, padding .3s ease;
+  border-bottom:1px solid transparent;
+}
+.nav.scrolled{
+  background:rgba(9,13,18,0.82);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--hair-dark);
+  padding-block:11px;
+}
+.brand{display:flex;align-items:center;gap:0.6em;font-family:'Archivo',sans-serif;font-weight:800;font-stretch:112%;letter-spacing:0.01em;font-size:1.02rem}
+.brand svg{width:22px;height:22px;flex:none}
+.nav-links{display:flex;align-items:center;gap:clamp(14px,2.2vw,30px)}
+.nav-links a{
+  font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.04em;
+  color:var(--muted-ink);transition:color .18s ease;
+}
+.nav-links a:hover{color:var(--paper-on-ink)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-cta{
+  font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.02em;
+  padding:0.6em 1em;border:1px solid var(--hair-dark-2);border-radius:2px;
+  color:var(--paper-on-ink);transition:border-color .18s ease,background .18s ease;
+}
+.nav-cta:hover{border-color:var(--signal);background:rgba(242,80,28,0.08)}
+.menu-btn{display:none;background:none;border:1px solid var(--hair-dark-2);border-radius:2px;color:var(--paper-on-ink);width:40px;height:36px;cursor:pointer;padding:0}
+.menu-btn span{display:block;width:16px;height:1.5px;background:currentColor;margin:3px auto;transition:.2s}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding-top:96px;padding-bottom:40px;overflow:hidden}
+.hero::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(60% 55% at 74% 46%, rgba(42,165,151,0.16), transparent 70%),
+    radial-gradient(50% 60% at 20% 90%, rgba(242,80,28,0.05), transparent 70%);
+  pointer-events:none;
+}
+.hero-grid{
+  position:relative;z-index:1;width:100%;
+  display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,4vw,56px);align-items:center;
+}
+.hero-copy{max-width:600px}
+.hero h1{font-size:clamp(2.7rem,6.4vw,5.5rem);margin:18px 0 0}
+.hero h1 .depth{position:relative;display:inline-block;color:var(--paper-on-ink)}
+.hero h1 .depth::after{
+  content:"three dimensions";position:absolute;left:0.06em;top:0.06em;z-index:-1;
+  color:var(--scan-deep);opacity:0.55;filter:blur(0.2px);
+}
+.hero-sub{margin:26px 0 0;color:#B7C2CD;font-size:clamp(1rem,1.15vw,1.16rem);max-width:38ch}
+.hero-sub b{color:var(--paper-on-ink);font-weight:600}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-meta{margin-top:34px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.hero-meta .lbl{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted-ink-2)}
+.hero-meta .chip{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.06em;color:var(--muted-ink);border:1px solid var(--hair-dark);border-radius:2px;padding:0.42em 0.7em;white-space:nowrap}
+
+/* scan stage */
+.scan-stage{position:relative;width:100%;height:min(62vh,560px);min-height:380px}
+.scan-frame{position:absolute;inset:0;border:1px solid var(--hair-dark);border-radius:3px;overflow:hidden;background:linear-gradient(180deg,rgba(19,28,37,0.35),rgba(9,13,18,0.1))}
+#scan-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#scan-fallback{position:absolute;inset:0;width:100%;height:100%}
+.scan-corner{position:absolute;width:14px;height:14px;border:1px solid var(--scan-deep);opacity:0.55;z-index:3}
+.scan-corner.tl{top:10px;left:10px;border-right:0;border-bottom:0}
+.scan-corner.tr{top:10px;right:10px;border-left:0;border-bottom:0}
+.scan-corner.bl{bottom:10px;left:10px;border-right:0;border-top:0}
+.scan-corner.br{bottom:10px;right:10px;border-left:0;border-top:0}
+.scan-tag{position:absolute;top:14px;left:18px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;letter-spacing:0.14em;color:var(--scan);text-transform:uppercase;display:flex;align-items:center;gap:0.55em}
+.scan-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--scan);box-shadow:0 0 0 0 rgba(99,224,210,0.6);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(99,224,210,0.55)}70%{box-shadow:0 0 0 7px rgba(99,224,210,0)}100%{box-shadow:0 0 0 0 rgba(99,224,210,0)}}
+.scan-readout{position:absolute;top:14px;right:18px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;letter-spacing:0.06em;color:var(--muted-ink);text-align:right}
+.scan-foot{position:absolute;left:18px;right:18px;bottom:14px;z-index:3;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.scan-hint{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted-ink);transition:opacity .4s ease}
+.scan-hint.hide{opacity:0}
+.scalebar{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.scalebar .bar{display:flex;height:5px;width:112px;border:1px solid var(--hair-dark-2)}
+.scalebar .bar i{flex:1;height:100%}
+.scalebar .bar i:nth-child(odd){background:var(--muted-ink);opacity:0.4}
+.scalebar .txt{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;color:var(--muted-ink)}
+
+/* ---------- trust strip ---------- */
+.trust{border-top:1px solid var(--hair-dark);border-bottom:1px solid var(--hair-dark);background:var(--ink-2)}
+.trust-inner{display:flex;flex-wrap:wrap;gap:14px 30px;align-items:center;padding-block:20px}
+.trust .k{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted-ink-2);margin-right:6px}
+.trust .cap{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;color:var(--muted-ink);display:flex;align-items:center;gap:0.55em}
+.trust .cap::before{content:"";width:5px;height:5px;background:var(--scan-deep);border-radius:1px;flex:none}
+
+/* ---------- generic paper section ---------- */
+.paper{background:var(--paper);color:var(--ink-on-paper);position:relative}
+.paper::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0.5;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:34px 34px;
+  -webkit-mask-image:radial-gradient(120% 100% at 50% 0,#000,transparent 78%);
+          mask-image:radial-gradient(120% 100% at 50% 0,#000,transparent 78%);
+}
+.paper .container{position:relative;z-index:1}
+.section{padding-block:clamp(72px,10vw,132px)}
+.sec-head{max-width:60ch}
+.sec-head h2{font-size:clamp(2rem,4.2vw,3.35rem);margin-top:16px;font-family:'Archivo',sans-serif;font-weight:800;font-stretch:112%;line-height:1.0;letter-spacing:-0.02em}
+.sec-head .em{color:var(--signal)}
+
+/* ---------- engine split ---------- */
+.split{display:grid;grid-template-columns:0.92fr 1.08fr;gap:clamp(28px,4.5vw,64px);align-items:center;margin-top:clamp(36px,5vw,60px)}
+.engine-copy p.lede{color:var(--muted-paper);margin:0 0 24px;font-size:1.06rem;max-width:44ch}
+.flist{list-style:none;margin:0 0 30px;padding:0;display:flex;flex-direction:column}
+.flist li{display:flex;gap:14px;padding:13px 0;border-top:1px solid #D3D8CD;align-items:flex-start}
+.flist li:last-child{border-bottom:1px solid #D3D8CD}
+.flist .n{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--signal);padding-top:2px;flex:none}
+.flist .t{font-size:0.99rem;line-height:1.4}
+.flist .t b{font-weight:700}
+.price{font-family:'IBM Plex Mono',monospace;font-size:0.86rem;color:var(--ink-on-paper);margin:2px 0 26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.price .amt{background:var(--ink-on-paper);color:var(--paper);padding:0.4em 0.7em;border-radius:2px}
+.price .or{color:var(--muted-paper)}
+
+/* drawing card */
+.dwg{position:relative;background:var(--paper-card);border:1px solid #D2D7CC;border-radius:3px;box-shadow:0 40px 80px -50px rgba(15,22,32,0.45);padding:0}
+.dwg-crop{position:absolute;width:16px;height:16px;z-index:2;pointer-events:none}
+.dwg-crop::before,.dwg-crop::after{content:"";position:absolute;background:#B9BFB3}
+.dwg-crop::before{width:16px;height:1px;top:0;left:0}
+.dwg-crop::after{width:1px;height:16px;top:0;left:0}
+.dwg-crop.tl{top:-1px;left:-1px}
+.dwg-crop.tr{top:-1px;right:-1px;transform:scaleX(-1)}
+.dwg-crop.bl{bottom:-1px;left:-1px;transform:scaleY(-1)}
+.dwg-crop.br{bottom:-1px;right:-1px;transform:scale(-1)}
+.dwg-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #E1E5DA}
+.dwg-title{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;color:var(--ink-on-paper);display:flex;align-items:center;gap:0.6em}
+.dwg-live{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--scan-deep);display:flex;align-items:center;gap:0.45em}
+.dwg-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--scan-deep)}
+.dwg-plan{padding:6px 6px 0}
+.dwg-plan svg{width:100%;height:auto}
+.sweep{animation:sweep 4.6s cubic-bezier(.5,0,.5,1) infinite}
+@keyframes sweep{0%{transform:translateX(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateX(420px);opacity:0}}
+.dwg-foot{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 16px;border-top:1px solid #E1E5DA;align-items:center}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.03em;padding:0.42em 0.6em;border:1px solid #D2D7CC;border-radius:2px;color:var(--ink-on-paper);display:inline-flex;align-items:center;gap:0.5em}
+.badge.meas{background:rgba(42,165,151,0.1);border-color:rgba(42,165,151,0.4);color:#1c7a70}
+.badge .num{font-weight:600}
+.badge.ok{color:#1c7a70;border-color:rgba(42,165,151,0.4)}
+.badge.push{margin-left:auto;color:var(--muted-paper);border-style:dashed}
+
+/* ---------- pipeline ---------- */
+.pipe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:clamp(36px,5vw,56px)}
+.step{position:relative;background:var(--paper-2);border:1px solid #D6DBD0;border-radius:3px;padding:24px 22px 26px;display:flex;flex-direction:column;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.step:hover{transform:translateY(-3px);box-shadow:0 30px 50px -40px rgba(15,22,32,0.5);border-color:#C4C9BE}
+.step .sn{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--signal);letter-spacing:0.08em}
+.step h3{font-family:'Archivo',sans-serif;font-weight:700;font-stretch:108%;font-size:1.32rem;margin:14px 0 8px;letter-spacing:-0.01em}
+.step p{color:var(--muted-paper);font-size:0.96rem;margin:0 0 20px}
+.step .dia{margin-top:auto;border-top:1px solid #D6DBD0;padding-top:16px}
+.step .dia svg{width:100%;height:74px}
+
+/* ---------- lenders (dark card on paper) ---------- */
+.lenders .split{align-items:center}
+.lenders-copy .lede{color:var(--muted-paper);margin:0 0 24px;font-size:1.06rem;max-width:44ch}
+.dash{position:relative;background:var(--ink-2);border:1px solid var(--hair-dark);border-radius:4px;box-shadow:0 50px 90px -50px rgba(9,13,18,0.7);overflow:hidden;color:var(--paper-on-ink)}
+.dash-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--hair-dark)}
+.dash-head .t{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;letter-spacing:0.05em;color:var(--paper-on-ink)}
+.dash-head .live{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--scan);display:flex;align-items:center;gap:0.45em}
+.dash-head .live .dot{width:6px;height:6px;border-radius:50%;background:var(--scan);animation:pulse 2.4s infinite}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--hair-dark)}
+.dash-stats .st{padding:18px;border-right:1px solid var(--hair-dark)}
+.dash-stats .st:last-child{border-right:0}
+.dash-stats .v{font-family:'Archivo',sans-serif;font-weight:800;font-stretch:110%;font-size:1.9rem;line-height:1;letter-spacing:-0.02em}
+.dash-stats .v .u{font-size:0.9rem;color:var(--muted-ink);margin-left:1px}
+.dash-stats .k{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted-ink);margin-top:7px}
+.tbl{width:100%;font-size:0.8rem}
+.tbl .row{display:grid;grid-template-columns:78px 1fr 62px 92px;gap:10px;padding:12px 18px;align-items:center;border-bottom:1px solid var(--hair-dark)}
+.tbl .row.h{color:var(--muted-ink-2);font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase}
+.tbl .row:last-child{border-bottom:0}
+.tbl .id{font-family:'IBM Plex Mono',monospace;color:var(--muted-ink)}
+.tbl .prop{color:#C6D0DA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl .sla{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted-ink)}
+.tbl .sla.warn{color:var(--signal-2)}
+.tbl .stt{font-family:'IBM Plex Mono',monospace;font-size:0.66rem;letter-spacing:0.04em;padding:0.35em 0.55em;border-radius:2px;border:1px solid var(--hair-dark-2);text-align:center;white-space:nowrap}
+.tbl .stt.qc{color:var(--signal-2);border-color:rgba(255,115,69,0.4)}
+.tbl .stt.insp{color:var(--scan);border-color:rgba(99,224,210,0.35)}
+.tbl .stt.done{color:var(--muted-ink)}
+.dash-flag{padding:11px 18px;border-top:1px solid var(--hair-dark);background:rgba(242,80,28,0.06);display:flex;align-items:center;gap:0.6em;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:#E7A98d}
+.dash-flag b{color:var(--signal-2)}
+
+/* ---------- thesis / final ---------- */
+.thesis{background:var(--ink);position:relative;overflow:hidden}
+.thesis::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 90% at 80% 30%,rgba(42,165,151,0.1),transparent 70%);pointer-events:none}
+.thesis .container{position:relative;z-index:1}
+.thesis-inner{display:grid;grid-template-columns:1fr 0.85fr;gap:clamp(28px,5vw,64px);align-items:end}
+.thesis h2{font-size:clamp(2rem,4.4vw,3.5rem);font-family:'Archivo',sans-serif;font-weight:800;font-stretch:112%;line-height:1.0;letter-spacing:-0.02em;margin-top:18px}
+.thesis h2 .em{color:var(--signal)}
+.thesis p{color:#B7C2CD;margin:22px 0 0;max-width:46ch;font-size:1.05rem}
+.thesis-cta{display:flex;flex-direction:column;gap:16px;padding-bottom:6px}
+.thesis-num{font-family:'IBM Plex Mono',monospace;color:var(--muted-ink);font-size:0.78rem;line-height:1.8;border-left:1px solid var(--hair-dark);padding-left:18px}
+.thesis-num b{color:var(--scan);font-weight:500}
+
+/* ---------- footer ---------- */
+.foot{background:var(--ink);border-top:1px solid var(--hair-dark);padding-block:56px 30px}
+.foot-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px}
+.foot-brand .brand{margin-bottom:16px}
+.foot-brand address{font-style:normal;color:var(--muted-ink);font-size:0.9rem;line-height:1.7}
+.foot h4{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted-ink-2);margin:0 0 14px;font-weight:500}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.foot ul a{color:var(--muted-ink);font-size:0.92rem;transition:color .18s ease}
+.foot ul a:hover{color:var(--paper-on-ink)}
+.foot-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:44px;padding-top:22px;border-top:1px solid var(--hair-dark)}
+.foot-bottom .c{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--muted-ink-2)}
+.foot-plumb{display:flex;align-items:center;gap:0.6em;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;color:var(--muted-ink-2);letter-spacing:0.08em}
+.foot-plumb .ln{width:1px;height:22px;background:linear-gradient(var(--hair-dark-2),transparent)}
+
+/* ---------- reveal ---------- */
+[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.6,.2,1),transform .7s cubic-bezier(.2,.6,.2,1)}
+[data-reveal].in{opacity:1;transform:none}
+[data-reveal][data-d="1"]{transition-delay:.08s}
+[data-reveal][data-d="2"]{transition-delay:.16s}
+[data-reveal][data-d="3"]{transition-delay:.24s}
+.draw{stroke-dasharray:var(--len,600);stroke-dashoffset:var(--len,600);transition:stroke-dashoffset 1.1s ease .2s}
+.in .draw{stroke-dashoffset:0}
+
+/* ---------- responsive ---------- */
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:1fr;gap:30px}
+  .scan-stage{height:min(52vh,440px);order:2}
+  .hero-copy{order:1}
+  .split{grid-template-columns:1fr;gap:34px}
+  .lenders .dwg,.lenders .dash{order:2}
+  .pipe-grid{grid-template-columns:1fr;gap:14px}
+  .thesis-inner{grid-template-columns:1fr;gap:30px;align-items:start}
+  .foot-top{grid-template-columns:1fr 1fr}
+}
+@media (max-width:720px){
+  .nav-links{display:none}
+  .nav-links.open{
+    display:flex;flex-direction:column;align-items:flex-start;gap:16px;
+    position:absolute;top:100%;left:0;right:0;
+    background:rgba(9,13,18,0.96);backdrop-filter:blur(12px);
+    padding:20px var(--pad);border-bottom:1px solid var(--hair-dark);
+  }
+  .menu-btn{display:block}
+  .nav .nav-cta{display:none}
+  .dash-stats{grid-template-columns:1fr}
+  .dash-stats .st{border-right:0;border-bottom:1px solid var(--hair-dark)}
+  .tbl .row{grid-template-columns:64px 1fr 84px;gap:8px}
+  .tbl .sla{display:none}
+  .foot-top{grid-template-columns:1fr}
+  .foot-bottom{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  [data-reveal]{opacity:1;transform:none}
+}
+/* ===== v2 additions ===== */
+
+/* chip links (audience routing) */
+.hero-meta a.chip{text-decoration:none;cursor:pointer;transition:border-color .16s ease,color .16s ease}
+.hero-meta a.chip:hover,.hero-meta a.chip:focus-visible{border-color:var(--scan-deep);color:var(--paper-on-ink);outline:none}
+
+/* focus visibility (keyboard) */
+:focus-visible{outline:2px solid var(--scan);outline-offset:2px}
+#scan-canvas:focus-visible{outline:2px solid var(--scan);outline-offset:3px;border-radius:2px}
+
+/* interactive plan rooms */
+.rm{fill:transparent;stroke:none;cursor:pointer;transition:fill .18s ease}
+.rm.on{fill:rgba(99,224,210,0.22)}
+
+/* area ledger */
+.ledger{margin-top:14px;border-top:1px solid #D6DBD0;padding-top:13px}
+.lg-cap{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted-paper);margin-bottom:7px}
+.lg-rows{display:grid;grid-template-columns:1fr 1fr;gap:1px 16px}
+.lg-row{appearance:none;-webkit-appearance:none;background:none;border:0;text-align:left;cursor:pointer;font-family:inherit;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 7px;border-radius:3px;color:var(--ink-on-paper);transition:background .15s ease}
+.lg-row:hover,.lg-row.on,.lg-row:focus-visible{background:rgba(42,165,151,0.13);outline:none}
+.lg-row .lg-r{font-size:0.8rem}
+.lg-row .lg-a{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;font-weight:600;white-space:nowrap}
+.lg-a i{font-style:normal;color:var(--muted-paper);font-weight:400;font-size:0.62rem;margin-left:2px}
+.lg-sum{display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:1px solid #D6DBD0}
+.lg-sum .lg-r{font-weight:700;font-size:0.9rem;letter-spacing:-0.01em}
+.lg-a.big{font-size:1.0rem;font-family:'IBM Plex Mono',monospace;font-weight:600}
+.lg-a.big .num{color:var(--scan-deep)}
+.lg-delta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:9px 11px;border:1px solid rgba(242,80,28,0.3);background:rgba(242,80,28,0.06);border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.69rem}
+.lg-rep{color:var(--muted-paper)}
+.lg-rep b{color:var(--ink-on-paper);font-weight:600}
+.lg-dlt{color:var(--signal);font-weight:700;white-space:nowrap}
+.lg-note{font-size:0.71rem;color:var(--muted-paper);margin-top:11px;line-height:1.45}
+
+/* standing behind the number */
+.stand{background:var(--ink);color:var(--paper-on-ink);border-top:1px solid var(--hair-dark);border-bottom:1px solid var(--hair-dark);position:relative}
+.stand::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--hair-dark) 1px,transparent 1px),linear-gradient(90deg,var(--hair-dark) 1px,transparent 1px);background-size:64px 64px;opacity:0.15;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse at 72% -10%, #000, transparent 76%);mask-image:radial-gradient(ellipse at 72% -10%, #000, transparent 76%)}
+.stand .container{position:relative;z-index:1}
+.stand-head{max-width:72ch}
+.stand-h{font-family:'Archivo',sans-serif;font-weight:800;font-stretch:110%;font-size:clamp(1.8rem,3.6vw,2.85rem);line-height:1.04;letter-spacing:-0.02em;margin:16px 0 0}
+.scan-em{color:var(--scan)}
+.stand-lede{max-width:64ch;margin:20px 0 0;color:#C3CDD4;font-size:1.02rem;line-height:1.55}
+.stand-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:clamp(34px,4.5vw,52px);background:var(--hair-dark);border:1px solid var(--hair-dark);border-radius:4px;overflow:hidden}
+.stand-card{background:var(--ink-2);padding:24px 22px 26px}
+.stand-n{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--scan-deep);letter-spacing:0.1em}
+.stand-card h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:1.06rem;letter-spacing:-0.01em;margin:14px 0 9px}
+.stand-card p{font-size:0.9rem;line-height:1.5;color:var(--muted-ink)}
+.stand-card p b{color:var(--paper-on-ink);font-weight:600}
+.stand-fine{font-family:'IBM Plex Mono',monospace;font-size:0.67rem;letter-spacing:0.02em;color:var(--muted-ink-2);margin-top:26px;max-width:82ch;line-height:1.55}
+
+/* sample marker */
+.sample{font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--signal);border:1px solid rgba(242,80,28,0.4);border-radius:2px;padding:0.15em 0.4em;margin-left:6px;vertical-align:middle}
+
+/* access request */
+.access{background:var(--ink-2);border:1px solid var(--hair-dark);border-radius:6px;padding:22px}
+.access-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--scan);margin-bottom:14px}
+.role{display:flex;gap:8px;margin-bottom:12px}
+.role-btn{flex:1;appearance:none;-webkit-appearance:none;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.73rem;letter-spacing:0.02em;padding:0.7em 0.6em;border-radius:4px;border:1px solid var(--hair-dark-2);background:transparent;color:var(--muted-ink);transition:all .16s ease}
+.role-btn:hover{border-color:#3a4b58;color:var(--paper-on-ink)}
+.role-btn.is-on{background:rgba(99,224,210,0.12);border-color:var(--scan-deep);color:var(--scan)}
+.access-field{display:flex;gap:8px}
+.access-field input{flex:1;min-width:0;background:var(--ink);border:1px solid var(--hair-dark-2);border-radius:4px;color:var(--paper-on-ink);font-family:inherit;font-size:0.92rem;padding:0.7em 0.85em}
+.access-field input::placeholder{color:#5b6976}
+.access-field input:focus{outline:none;border-color:var(--scan-deep);box-shadow:0 0 0 3px rgba(99,224,210,0.14)}
+.access-field .btn{flex:none}
+.access-msg{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;margin:11px 0 0;min-height:1em}
+.access-msg.err{color:var(--signal-2)}
+.access-msg.ok{color:var(--scan)}
+.access-note{font-size:0.72rem;color:var(--muted-ink-2);margin:9px 0 0;line-height:1.4}
+
+/* sr-only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* responsive */
+@media (max-width:860px){
+  .stand-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .stand-grid{grid-template-columns:1fr}
+  .lg-rows{grid-template-columns:1fr}
+  .role{flex-direction:column}
+}
+/* ===== v3 additions ===== */
+
+/* validation / accuracy */
+.valid-head{max-width:74ch}
+.valid-h{font-family:'Archivo',sans-serif;font-weight:800;font-stretch:110%;font-size:clamp(1.75rem,3.5vw,2.8rem);line-height:1.05;letter-spacing:-0.02em;margin:16px 0 0}
+.valid-h .em{color:var(--signal)}
+.valid-lede{max-width:64ch;margin:20px 0 0;font-size:1.02rem;line-height:1.55;color:#33404b}
+.valid-lede b{font-weight:700;color:var(--ink-on-paper)}
+.valid-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:clamp(26px,4vw,52px);align-items:center;margin-top:clamp(34px,4.5vw,54px)}
+.valid-chart{margin:0}
+.vc-frame{position:relative;background:var(--paper-card);border:1px solid #D6DBD0;border-radius:5px;padding:16px 16px 10px;box-shadow:0 30px 60px -46px rgba(9,13,18,0.5)}
+#valid-svg{display:block;width:100%;height:auto;overflow:visible}
+.valid-chart figcaption{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.06em;color:var(--muted-paper);margin-top:12px;text-align:center}
+.v-axis{stroke:#0F1620;stroke-width:1.2}
+.v-grid{stroke:#DCE0D7;stroke-width:1}
+.v-tick{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--muted-paper)}
+.v-atitle{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;fill:var(--muted-paper)}
+.v-ref{stroke:var(--signal);stroke-width:1.4;stroke-dasharray:5 4;opacity:0.85}
+.v-reflab{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--signal)}
+.v-region{fill:rgba(42,165,151,0.055)}
+.v-regionlab{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:#2AA597;letter-spacing:0.04em}
+.vpt{fill:#2AA597;fill-opacity:0.82;stroke:#0f1620;stroke-opacity:0.12;stroke-width:0.5;cursor:pointer;transition:fill-opacity .15s ease,r .15s ease}
+.vpt:hover{fill-opacity:1}
+.vpt.flag{fill:#F2501C;fill-opacity:0.95;stroke:#7a2a12;stroke-opacity:0.5}
+.reveal-pts .vpt{opacity:0;transform:scale(0.35);transform-box:fill-box;transform-origin:center;transition:opacity .5s ease,transform .55s cubic-bezier(.2,.85,.25,1),fill-opacity .15s ease}
+.reveal-pts .vpt.in{opacity:1;transform:scale(1)}
+.vc-tip{position:absolute;pointer-events:none;z-index:4;background:var(--ink);color:var(--paper-on-ink);border:1px solid var(--hair-dark-2);border-radius:4px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;line-height:1.5;white-space:nowrap;transform:translate(-50%,-118%);box-shadow:0 14px 30px -16px rgba(0,0,0,0.6)}
+.vc-tip b{color:var(--scan);font-weight:600}
+.vc-tip .up{color:var(--signal-2)}
+.valid-side{display:flex;flex-direction:column;gap:0}
+.vstat{padding:16px 0;border-top:1px solid #D3D8CD}
+.vstat:first-child{border-top:0;padding-top:0}
+.vv{font-family:'Archivo',sans-serif;font-weight:800;font-stretch:110%;font-size:2.3rem;line-height:1;letter-spacing:-0.02em;color:var(--ink-on-paper);display:flex;align-items:baseline}
+.vv i{font-style:normal;font-size:1.05rem;color:var(--scan-deep);margin-left:1px}
+.vv .num{color:var(--scan-deep)}
+.vk{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.04em;color:var(--muted-paper);margin-top:8px}
+.vside-note{font-size:0.9rem;line-height:1.5;color:#33404b;margin:18px 0 0;padding-top:18px;border-top:1px solid #D3D8CD}
+.vside-note b{font-weight:700;color:var(--signal)}
+
+/* pricing */
+.pricing-head{max-width:60ch}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:clamp(34px,4.5vw,52px);align-items:stretch}
+.tier{position:relative;background:var(--paper-card);border:1px solid #D6DBD0;border-radius:6px;padding:26px 24px 24px;display:flex;flex-direction:column}
+.tier.feat{border-color:var(--ink-on-paper);box-shadow:0 40px 70px -50px rgba(9,13,18,0.6)}
+.tier-badge{position:absolute;top:-11px;left:24px;background:var(--signal);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.35em 0.7em;border-radius:2px}
+.tier-name{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted-paper)}
+.tier-price{display:flex;align-items:baseline;gap:2px;margin-top:14px;color:var(--ink-on-paper)}
+.tier-price .cur{font-family:'Archivo',sans-serif;font-weight:700;font-size:1.4rem;align-self:flex-start;margin-top:0.35em}
+.tier-price .amt{font-family:'Archivo',sans-serif;font-weight:800;font-stretch:112%;font-size:3rem;line-height:1;letter-spacing:-0.03em}
+.tier-price .amt.sm{font-size:2rem}
+.tier-price .per{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted-paper);margin-left:6px}
+.tier-for{font-size:0.9rem;color:var(--muted-paper);margin-top:8px}
+.tier-list{list-style:none;margin:20px 0 22px;padding:20px 0 0;border-top:1px solid #D9DED4;display:flex;flex-direction:column;gap:11px;flex:1}
+.tier-list li{position:relative;padding-left:22px;font-size:0.92rem;line-height:1.4;color:#2c3843}
+.tier-list li::before{content:"";position:absolute;left:0;top:0.5em;width:9px;height:5px;border-left:1.5px solid var(--scan-deep);border-bottom:1.5px solid var(--scan-deep);transform:rotate(-45deg)}
+.tier-cta{display:block;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.04em;text-decoration:none;padding:0.85em 1em;border-radius:3px;background:var(--ink-on-paper);color:var(--paper);border:1px solid var(--ink-on-paper);transition:transform .16s ease,box-shadow .16s ease}
+.tier-cta:hover{transform:translateY(-1px);box-shadow:0 10px 22px -14px rgba(9,13,18,0.8)}
+.tier-cta.ghost{background:transparent;color:var(--ink-on-paper);border-color:#C4C9BE}
+.tier-cta.ghost:hover{border-color:var(--ink-on-paper);box-shadow:none}
+.tier-foot{font-family:'IBM Plex Mono',monospace;font-size:0.66rem;color:var(--muted-paper);text-align:center;margin-top:12px}
+.tier-ent{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:16px;background:var(--ink);color:var(--paper-on-ink);border-radius:6px;padding:26px 28px}
+.tier-ent .ent-k{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--scan)}
+.tier-ent .ent-l{max-width:62ch}
+.tier-ent .ent-l p{margin:9px 0 0;color:var(--muted-ink);font-size:0.94rem;line-height:1.5}
+.tier-ent .btn{flex:none}
+
+/* responsive v3 */
+@media (max-width:900px){
+  .valid-grid{grid-template-columns:1fr;gap:30px}
+  .tiers{grid-template-columns:1fr;max-width:460px}
+  .tier.feat{order:-1}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Parallax home">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" stroke="#F2501C" stroke-width="1.3"/>
+      <path d="M12 1.5V6M12 18v4.5M1.5 12H6M18 12h4.5" stroke="#E9EEF2" stroke-width="1.3"/>
+      <circle cx="14.4" cy="9.6" r="2.1" fill="#63E0D2"/>
+    </svg>
+    <span>PARALLAX</span>
+  </a>
+  <div class="nav-links" id="navlinks">
+    <a href="#engine">The engine</a>
+    <a href="#validation">Evidence</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#lenders">Lenders &amp; AMCs</a>
+    <a href="#thesis">Thesis</a>
+  </div>
+  <div class="nav-right">
+    <a class="nav-cta" href="#start">Get started →</a>
+    <button class="menu-btn" id="menubtn" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow" data-reveal>Spatial appraisal infrastructure · UAD 3.6</span>
+      <h1 class="display" data-reveal data-d="1">Value, measured in&nbsp;<span class="depth">three&nbsp;dimensions.</span></h1>
+      <p class="hero-sub" data-reveal data-d="2">Flat comps and reported square footage miss what a property actually is. <b>Parallax reconstructs every home in 3D, derives GLA and volume from the geometry,</b> and hands your appraisers a UAD&nbsp;3.6 draft that's already been checked.</p>
+      <div class="hero-actions" data-reveal data-d="2">
+        <a class="btn" href="#start">Get started <span class="arw">→</span></a>
+        <a class="btn-ghost" href="#pipeline">See how it works</a>
+      </div>
+      <div class="hero-meta" data-reveal data-d="3">
+        <span class="lbl">Built for</span>
+        <a class="chip" href="#engine">Appraisers</a>
+        <a class="chip" href="#lenders">Lenders</a>
+        <a class="chip" href="#lenders">AMCs</a>
+      </div>
+    </div>
+
+    <div class="scan-stage" data-reveal data-d="1">
+      <div class="scan-frame">
+        <canvas id="scan-canvas" tabindex="0" role="img" aria-label="Interactive 3D point-cloud reconstruction of a house. Drag, or focus and use arrow keys, to rotate."></canvas>
+        <!-- static fallback (shown if WebGL/Three unavailable) -->
+        <svg id="scan-fallback" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <g stroke="#3a5b5e" stroke-width="1" fill="none" opacity="0.7">
+            <path d="M110 250 L110 160 L210 120 L210 210 Z"/>
+            <path d="M210 210 L210 120 L300 150 L300 240 Z"/>
+            <path d="M110 160 L160 120 L260 82 L210 120 Z"/>
+            <path d="M210 120 L260 82 L350 112 L300 150 Z"/>
+            <path d="M260 82 L260 60 L300 72"/>
+          </g>
+          <g fill="#63E0D2">
+            <circle cx="120" cy="180" r="1.4"/><circle cx="150" cy="200" r="1.4"/><circle cx="180" cy="160" r="1.4"/>
+            <circle cx="200" cy="190" r="1.4"/><circle cx="240" cy="150" r="1.4"/><circle cx="270" cy="180" r="1.4"/>
+            <circle cx="160" cy="140" r="1.2"/><circle cx="230" cy="110" r="1.2"/><circle cx="290" cy="200" r="1.2"/>
+            <circle cx="140" cy="230" r="1.2"/><circle cx="210" cy="230" r="1.2"/><circle cx="300" cy="130" r="1.2"/>
+          </g>
+        </svg>
+        <span class="scan-corner tl"></span><span class="scan-corner tr"></span>
+        <span class="scan-corner bl"></span><span class="scan-corner br"></span>
+        <div class="scan-tag"><span class="dot"></span>Point cloud · 1420 Elmwood Dr</div>
+        <div class="scan-readout" id="scan-readout">AZ 046°<br>EL 16°</div>
+        <div class="scan-foot">
+          <span class="scan-hint" id="scan-hint">Drag or use arrow keys</span>
+          <div class="scalebar">
+            <div class="bar"><i></i><i></i><i></i><i></i></div>
+            <span class="txt">1/4″ = 1′-0″</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TRUST -->
+<section class="trust">
+  <div class="container trust-inner">
+    <span class="k">On the spatial stack</span>
+    <span class="cap">UAD 3.6 native</span>
+    <span class="cap">24-hour capture</span>
+    <span class="cap">5-state coverage</span>
+    <span class="cap">Fannie / Freddie forms</span>
+    <span class="cap">Measured-area evidence</span>
+  </div>
+</section>
+
+<!-- ENGINE -->
+<section class="paper" id="engine">
+  <div class="section container">
+    <div class="split">
+      <div class="engine-copy">
+        <span class="eyebrow" data-reveal><span class="idx">01</span> The engine</span>
+        <h2 class="sec-head" data-reveal data-d="1" style="margin-top:16px">Appraisal that starts from the <span class="em">geometry.</span></h2>
+        <p class="lede" data-reveal data-d="1" style="margin-top:22px">Parallax ingests a LiDAR scan, drone capture, or existing floor plan and rebuilds the property to scale. Gross living area and volume come off the model itself — measured, not transcribed.</p>
+        <ul class="flist" data-reveal data-d="2">
+          <li><span class="n">A</span><span class="t"><b>Measured GLA and volume</b>, derived from the reconstruction — never re-keyed from a prior report.</span></li>
+          <li><span class="n">B</span><span class="t"><b>Spatial comps</b> matched on layout and massing, not just bed-and-bath counts.</span></li>
+          <li><span class="n">C</span><span class="t"><b>Discrepancy flags</b> wherever reported area disagrees with measured area.</span></li>
+          <li><span class="n">D</span><span class="t"><b>UAD 3.6-native</b> forms, with legacy 2.6 import when you need it.</span></li>
+        </ul>
+        <div class="price" data-reveal data-d="2">
+          <span class="amt">$20 / report</span><span class="or">or</span><span class="amt">$1,500 / year</span>
+        </div>
+        <a class="link-arw" href="#start" data-reveal data-d="2">See the engine <span class="arw">→</span></a>
+      </div>
+
+      <!-- drawing card -->
+      <div class="dwg" data-reveal data-d="1">
+        <span class="dwg-crop tl"></span><span class="dwg-crop tr"></span><span class="dwg-crop bl"></span><span class="dwg-crop br"></span>
+        <div class="dwg-head">
+          <span class="dwg-title">§ 1420 Elmwood Dr · Report draft</span>
+          <span class="dwg-live">Live</span>
+        </div>
+        <div class="dwg-plan">
+          <svg viewBox="0 0 520 350" role="img" aria-label="Floor plan with measured dimensions">
+            <defs>
+              <linearGradient id="sweepg" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#63E0D2" stop-opacity="0"/>
+                <stop offset="0.5" stop-color="#63E0D2" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#63E0D2" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- top dimension -->
+            <g stroke="#F2501C" stroke-width="1">
+              <line x1="70" y1="34" x2="470" y2="34"/>
+              <line x1="70" y1="28" x2="70" y2="40"/>
+              <line x1="470" y1="28" x2="470" y2="40"/>
+            </g>
+            <text x="270" y="30" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#0F1620">42′-0″</text>
+            <!-- left dimension -->
+            <g stroke="#F2501C" stroke-width="1">
+              <line x1="46" y1="60" x2="46" y2="300"/>
+              <line x1="40" y1="60" x2="52" y2="60"/>
+              <line x1="40" y1="300" x2="52" y2="300"/>
+            </g>
+            <text x="30" y="184" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#0F1620" transform="rotate(-90 30 184)">24′-6″</text>
+
+            <!-- outer walls -->
+            <rect class="draw" style="--len:1330" x="70" y="60" width="400" height="240" fill="none" stroke="#0F1620" stroke-width="2"/>
+            <!-- interactive room regions (linked to ledger) -->
+            <g class="rooms">
+              <rect class="rm" data-room="living"  x="70"  y="60"  width="180" height="140"/>
+              <rect class="rm" data-room="kitchen" x="70"  y="200" width="180" height="100"/>
+              <rect class="rm" data-room="primary" x="250" y="60"  width="220" height="116"/>
+              <rect class="rm" data-room="br2"     x="250" y="176" width="110" height="124"/>
+              <rect class="rm" data-room="bath"    x="360" y="176" width="110" height="124"/>
+            </g>
+            <!-- interior partitions -->
+            <g stroke="#0F1620" stroke-width="1.3" class="draw" style="--len:900">
+              <line x1="250" y1="60" x2="250" y2="300"/>
+              <line x1="250" y1="176" x2="470" y2="176"/>
+              <line x1="360" y1="176" x2="360" y2="300"/>
+              <line x1="70" y1="200" x2="250" y2="200"/>
+            </g>
+            <!-- door swings -->
+            <g stroke="#9AA3AD" stroke-width="1" fill="none">
+              <path d="M250 120 A22 22 0 0 1 228 142"/>
+              <path d="M310 176 A20 20 0 0 1 330 196"/>
+            </g>
+            <!-- room labels -->
+            <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#586171" letter-spacing="0.06em">
+              <text x="150" y="120" text-anchor="middle">LIVING</text>
+              <text x="150" y="255" text-anchor="middle">KITCHEN</text>
+              <text x="360" y="125" text-anchor="middle">PRIMARY</text>
+              <text x="305" y="245" text-anchor="middle">BR 2</text>
+              <text x="415" y="245" text-anchor="middle">BATH</text>
+            </g>
+            <!-- interior dim -->
+            <g stroke="#c7ccc1" stroke-width="1">
+              <line x1="70" y1="320" x2="250" y2="320"/>
+              <line x1="70" y1="315" x2="70" y2="325"/>
+              <line x1="250" y1="315" x2="250" y2="325"/>
+            </g>
+            <text x="160" y="317" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="#586171">18′-4″</text>
+            <!-- north arrow -->
+            <g transform="translate(447,300)">
+              <circle r="15" fill="none" stroke="#c7ccc1"/>
+              <path d="M0 -11 L4 4 L0 0 L-4 4 Z" fill="#0F1620"/>
+              <text x="0" y="-18" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="#586171">N</text>
+            </g>
+            <!-- scan sweep -->
+            <rect class="sweep" x="70" y="60" width="26" height="240" fill="url(#sweepg)"/>
+          </svg>
+        </div>
+        <div class="dwg-foot">
+          <span class="badge meas">GLA · MEASURED ✓</span>
+          <span class="badge">VOL <span class="num">13,120</span> CF</span>
+          <span class="badge ok">UAD 3.6 ✓</span>
+          <span class="badge push">Auto-saved 12:04</span>
+        </div>
+        <div class="ledger" aria-label="Measured area ledger — figures reconcile to gross living area">
+          <div class="lg-cap">Area ledger · hover a room</div>
+          <div class="lg-rows">
+            <button type="button" class="lg-row" data-room="living"><span class="lg-r">Living</span><span class="lg-a">388<i>sf</i></span></button>
+            <button type="button" class="lg-row" data-room="kitchen"><span class="lg-r">Kitchen</span><span class="lg-a">236<i>sf</i></span></button>
+            <button type="button" class="lg-row" data-room="primary"><span class="lg-r">Primary</span><span class="lg-a">322<i>sf</i></span></button>
+            <button type="button" class="lg-row" data-room="br2"><span class="lg-r">Bedroom 2</span><span class="lg-a">214<i>sf</i></span></button>
+            <button type="button" class="lg-row" data-room="bath"><span class="lg-r">Bath · circ.</span><span class="lg-a">328<i>sf</i></span></button>
+          </div>
+          <div class="lg-sum">
+            <span class="lg-r">Measured GLA</span>
+            <span class="lg-a big"><span class="num" data-count="1488">1,488</span><i>sf</i></span>
+          </div>
+          <div class="lg-delta">
+            <span class="lg-rep">Reported on tax record <b>1,446 sf</b></span>
+            <span class="lg-dlt">Δ +42 sf caught</span>
+          </div>
+          <div class="lg-note">Every figure traces back to the scan — nothing re-keyed. Measured to the ANSI Z765 standard.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STANDING BEHIND THE NUMBER -->
+<section class="stand" id="evidence">
+  <div class="container section">
+    <div class="stand-head">
+      <span class="eyebrow" data-reveal>Standing behind the number</span>
+      <h2 class="stand-h" data-reveal data-d="1">We don't replace the appraiser. We hand them <span class="scan-em">measured evidence.</span></h2>
+      <p class="stand-lede" data-reveal data-d="1">Parallax is measurement infrastructure, not an automated valuation model. The reconstruction produces an auditable workfile; a state-licensed appraiser reviews it, applies judgment, and signs the report. That keeps the value defensible — and keeps everyone's license intact.</p>
+    </div>
+    <div class="stand-grid">
+      <div class="stand-card" data-reveal data-d="1">
+        <span class="stand-n">01</span>
+        <h3>Measured to standard</h3>
+        <p>Gross living area is taken off the 3D model to the <b>ANSI Z765</b> residential standard — the same rulebook a tape measure is supposed to follow, applied without the transcription error.</p>
+      </div>
+      <div class="stand-card" data-reveal data-d="2">
+        <span class="stand-n">02</span>
+        <h3>Appraiser independence, intact</h3>
+        <p>The licensed appraiser owns the opinion of value. Parallax never sets the number — it supplies the geometry — so <b>appraiser-independence</b> rules are preserved, not bent.</p>
+      </div>
+      <div class="stand-card" data-reveal data-d="3">
+        <span class="stand-n">03</span>
+        <h3>Built for the workfile</h3>
+        <p>Every report is <b>UAD 3.6-native</b> on Fannie and Freddie forms, with the measured-area exhibit attached — structured to support a USPAP-compliant workfile a reviewer can defend.</p>
+      </div>
+      <div class="stand-card" data-reveal data-d="4">
+        <span class="stand-n">04</span>
+        <h3>Auditable end to end</h3>
+        <p>Every dimension traces to a point in the scan. Reopen any figure and see where it came from — no re-keyed numbers, no black box between capture and value.</p>
+      </div>
+    </div>
+    <p class="stand-fine" data-reveal>Accuracy targets, coverage, and pipeline figures shown across this site are illustrative placeholders for demonstration — swap in your own before going live.</p>
+  </div>
+</section>
+
+<!-- VALIDATION -->
+<section class="paper valid" id="validation" style="border-top:1px solid #D6DBD0">
+  <div class="section container">
+    <div class="valid-head">
+      <span class="eyebrow" data-reveal>The evidence</span>
+      <h2 class="valid-h" data-reveal data-d="1">On a 44-home sample, the county record was wrong <span class="em">80% of the time.</span></h2>
+      <p class="valid-lede" data-reveal data-d="1">Each point is one property — county-record square footage across the bottom, Parallax's measured GLA up the side. If records were right, every point would land on the line. They don't, and they miss in one direction: public data under-reports living area by a median of <b>2.6%</b>. That error flows silently into every comp built on top of it.</p>
+    </div>
+    <div class="valid-grid">
+      <figure class="valid-chart" data-reveal data-d="1">
+        <div class="vc-frame">
+          <span class="dwg-crop tl"></span><span class="dwg-crop tr"></span><span class="dwg-crop bl"></span><span class="dwg-crop br"></span>
+          <svg id="valid-svg" viewBox="0 0 640 470" role="img" aria-label="Scatter plot of measured gross living area versus county-record square footage for 44 homes. Most points sit above the line of agreement, showing county records systematically under-report living area. Full data follows in a table."></svg>
+          <div class="vc-tip" id="vc-tip" hidden></div>
+        </div>
+        <figcaption>Measured GLA vs. county record · 44-home validation sample · illustrative data</figcaption>
+        <div class="sr-only" id="valid-table"></div>
+      </figure>
+      <div class="valid-side" data-reveal data-d="2">
+        <div class="vstat"><div class="vv"><span class="num" data-count="80">80</span><i>%</i></div><div class="vk">of records off by more than 1%</div></div>
+        <div class="vstat"><div class="vv">+<span class="num" data-count="2.6" data-dec="1">2.6</span><i>%</i></div><div class="vk">median under-report in county data</div></div>
+        <div class="vstat"><div class="vv">±<span class="num" data-count="0.4" data-dec="1">0.4</span><i>%</i></div><div class="vk">Parallax vs. hand-measured control</div></div>
+        <p class="vside-note">The record isn't noisy — it's <b>biased low.</b> Measuring first is the only way to know which way the error runs before it gets priced in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="paper" id="pipeline" style="border-top:1px solid #D6DBD0">
+  <div class="section container">
+    <div class="sec-head">
+      <span class="eyebrow" data-reveal>The pipeline</span>
+      <h2 data-reveal data-d="1">Three steps from capture to signed value.</h2>
+    </div>
+    <div class="pipe-grid">
+      <article class="step" data-reveal data-d="1">
+        <span class="sn">01 / CAPTURE</span>
+        <h3>Capture the space</h3>
+        <p>Upload a LiDAR scan, drone set, or floor plan — or send a Parallax tech. 24-hour capture across five states.</p>
+        <div class="dia">
+          <svg viewBox="0 0 220 74" fill="none" aria-hidden="true">
+            <g stroke="#2AA597" stroke-width="1">
+              <path d="M20 54 L20 30 L48 20 L48 44 Z"/><path d="M48 44 L48 20 L70 28 L70 52 Z"/><path d="M20 30 L34 22 L56 12 L48 20 Z"/>
+            </g>
+            <g fill="#F2501C"><circle cx="150" cy="24" r="3"/></g>
+            <g stroke="#F2501C" stroke-width="1" stroke-dasharray="3 3" opacity="0.8">
+              <line x1="150" y1="27" x2="96" y2="46"/><line x1="150" y1="27" x2="120" y2="20"/><line x1="150" y1="27" x2="110" y2="54"/>
+            </g>
+            <text x="150" y="46" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" fill="#586171">scan</text>
+          </svg>
+        </div>
+      </article>
+      <article class="step" data-reveal data-d="2">
+        <span class="sn">02 / RECONSTRUCT</span>
+        <h3>Rebuild to scale</h3>
+        <p>Our spatial models reconstruct the property, deriving GLA, volume, and layout at measurement-grade tolerance.</p>
+        <div class="dia">
+          <svg viewBox="0 0 220 74" fill="none" aria-hidden="true">
+            <g stroke="#0F1620" stroke-width="1.3">
+              <rect x="70" y="24" width="80" height="34"/><line x1="110" y1="24" x2="110" y2="58"/>
+            </g>
+            <g stroke="#F2501C" stroke-width="1">
+              <line x1="70" y1="16" x2="150" y2="16"/><line x1="70" y1="12" x2="70" y2="20"/><line x1="150" y1="12" x2="150" y2="20"/>
+            </g>
+            <text x="110" y="70" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" fill="#586171">GLA 1,488 sf</text>
+          </svg>
+        </div>
+      </article>
+      <article class="step" data-reveal data-d="3">
+        <span class="sn">03 / VALUE</span>
+        <h3>Assemble the report</h3>
+        <p>The UAD 3.6 draft builds with spatial comps and QC flags. Your appraiser reviews, adjusts, and signs.</p>
+        <div class="dia">
+          <svg viewBox="0 0 220 74" fill="none" aria-hidden="true">
+            <g stroke="#0F1620" stroke-width="1.2">
+              <rect x="78" y="14" width="64" height="46" rx="2"/>
+              <line x1="88" y1="26" x2="132" y2="26"/><line x1="88" y1="35" x2="132" y2="35"/><line x1="88" y1="44" x2="118" y2="44"/>
+            </g>
+            <circle cx="140" cy="52" r="10" fill="#2AA597"/>
+            <path d="M135 52 l3 3 l6 -7" stroke="#fff" stroke-width="1.6" fill="none"/>
+          </svg>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- LENDERS -->
+<section class="paper lenders" id="lenders" style="border-top:1px solid #D6DBD0">
+  <div class="section container">
+    <div class="split">
+      <!-- dashboard -->
+      <div class="dash" data-reveal>
+        <div class="dash-head">
+          <span class="t">Parallax Appraisals · Portal <em class="sample">sample</em></span>
+          <span class="live"><span class="dot"></span>Live pipeline</span>
+        </div>
+        <div class="dash-stats">
+          <div class="st"><div class="v" data-count="1284">1,284</div><div class="k">Open orders</div></div>
+          <div class="st"><div class="v"><span data-count="98.6" data-dec="1">98.6</span><span class="u">%</span></div><div class="k">On-time SLA</div></div>
+          <div class="st"><div class="v"><span data-count="22">22</span><span class="u">h</span></div><div class="k">Median TAT</div></div>
+        </div>
+        <div class="tbl">
+          <div class="row h"><span>Order</span><span>Property</span><span>SLA</span><span>Status</span></div>
+          <div class="row"><span class="id">PX-4821</span><span class="prop">1420 Elmwood Dr · Katy TX</span><span class="sla warn">4h left</span><span class="stt qc">QC review</span></div>
+          <div class="row"><span class="id">PX-4820</span><span class="prop">88 Fillmore St · Sugar Land TX</span><span class="sla">18h left</span><span class="stt insp">Inspection</span></div>
+          <div class="row"><span class="id">PX-4819</span><span class="prop">204 Pine Ln · Stafford TX</span><span class="sla">on time</span><span class="stt done">Delivered</span></div>
+          <div class="row"><span class="id">PX-4818</span><span class="prop">742 Vermont Ave · Bellaire TX</span><span class="sla">on time</span><span class="stt done">Delivered</span></div>
+        </div>
+        <div class="dash-flag">⚑&nbsp; Spatial QC · PX-4821: reported GLA 1,446 sf vs measured <b>1,488 sf&nbsp;(Δ +42)</b></div>
+      </div>
+
+      <div class="lenders-copy">
+        <span class="eyebrow" data-reveal><span class="idx">02</span> For lenders &amp; AMCs</span>
+        <h2 class="sec-head" data-reveal data-d="1" style="margin-top:16px">Custom spatial QC, <span class="em">or turn-key reports.</span></h2>
+        <p class="lede" data-reveal data-d="1" style="margin-top:22px">Bespoke QC engines, white-label portals, and integrations on the spatial stack we run ourselves. Or skip the build and order from Parallax Appraisals, our in-house firm. Every report ships with measured-area evidence a reviewer can trust.</p>
+        <ul class="flist" data-reveal data-d="2">
+          <li><span class="n">A</span><span class="t"><b>Spatial QC</b> with your overlays, rules, and escalation paths.</span></li>
+          <li><span class="n">B</span><span class="t"><b>White-label portal</b> built around your existing stack.</span></li>
+          <li><span class="n">C</span><span class="t"><b>Parallax Appraisals:</b> 24h SLA, always on time in five states.</span></li>
+          <li><span class="n">D</span><span class="t"><b>Measured-area evidence</b> attached to every delivered report.</span></li>
+        </ul>
+        <a class="link-arw" href="#start" data-reveal data-d="2">See what we build <span class="arw">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="paper pricing" id="pricing" style="border-top:1px solid #D6DBD0">
+  <div class="section container">
+    <div class="pricing-head">
+      <span class="eyebrow" data-reveal>Pricing</span>
+      <h2 class="sec-head" data-reveal data-d="1" style="margin-top:16px">Priced per report, or <span class="em">per year.</span></h2>
+      <p class="lede" data-reveal data-d="1" style="margin-top:18px;max-width:58ch">Start on a single report and switch to a plan when the math flips. Measured evidence and UAD 3.6 output are included at every tier — never metered.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier" data-reveal data-d="1">
+        <div class="tier-name">Per report</div>
+        <div class="tier-price"><span class="cur">$</span><span class="amt">20</span><span class="per">/ report</span></div>
+        <div class="tier-for">Solo &amp; occasional volume</div>
+        <ul class="tier-list">
+          <li>Measured GLA &amp; volume, every report</li>
+          <li>UAD 3.6-native output</li>
+          <li>Discrepancy flags vs. public record</li>
+          <li>Pay as you go — no commitment</li>
+        </ul>
+        <a class="tier-cta ghost" href="#start">Start a report</a>
+      </div>
+      <div class="tier feat" data-reveal data-d="2">
+        <div class="tier-badge">Most appraisers</div>
+        <div class="tier-name">Practice</div>
+        <div class="tier-price"><span class="cur">$</span><span class="amt">1,500</span><span class="per">/ year</span></div>
+        <div class="tier-for">Full-time, unlimited reports</div>
+        <ul class="tier-list">
+          <li>Everything in Per report</li>
+          <li>Unlimited measured reports</li>
+          <li>Spatial comp matching</li>
+          <li>Legacy 2.6 import + priority processing</li>
+        </ul>
+        <a class="tier-cta" href="#start">Get Practice</a>
+        <div class="tier-foot">Breaks even near 75 reports a year</div>
+      </div>
+      <div class="tier" data-reveal data-d="3">
+        <div class="tier-name">Team</div>
+        <div class="tier-price"><span class="amt sm">Custom</span></div>
+        <div class="tier-for">Multi-appraiser shops</div>
+        <ul class="tier-list">
+          <li>Everything in Practice</li>
+          <li>Per-seat licensing &amp; shared queue</li>
+          <li>Review workflows &amp; audit log</li>
+          <li>SSO and roll-up reporting</li>
+        </ul>
+        <a class="tier-cta ghost" href="#start">Talk to us</a>
+      </div>
+    </div>
+    <div class="tier-ent" data-reveal>
+      <div class="ent-l">
+        <div class="ent-k">Lenders &amp; AMCs</div>
+        <p>Custom spatial QC, white-label portals, or turn-key reports from Parallax Appraisals — priced to your volume and SLA, with measured-area evidence on every file.</p>
+      </div>
+      <a class="btn" href="#start">Book a walkthrough <span class="arw">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- THESIS / FINAL CTA -->
+<section class="thesis section" id="thesis">
+  <div class="container">
+    <div class="thesis-inner">
+      <div>
+        <span class="eyebrow" data-reveal>Why we exist</span>
+        <h2 data-reveal data-d="1">The industry digitized the form. Nobody fixed the <span class="em">tape measure.</span></h2>
+        <p data-reveal data-d="1">Fifteen years of appraisal tech went into faster data entry — the same reported square footage, typed into a cleaner form. But every comp, every adjustment, every final value rests on one measurement almost no one re-checks. Parallax fixes that first input, and lets the rest of the report stand on something real.</p>
+      </div>
+      <div class="thesis-cta" id="start">
+        <div class="access" data-reveal data-d="2">
+          <div class="access-lbl">Request access</div>
+          <div class="role" role="group" aria-label="I am a…">
+            <button type="button" class="role-btn is-on" data-role="appraiser">I'm an appraiser</button>
+            <button type="button" class="role-btn" data-role="lender">Lender · AMC</button>
+          </div>
+          <label class="sr-only" for="access-email">Work email</label>
+          <div class="access-field">
+            <input id="access-email" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com" />
+            <button type="button" class="btn" id="access-go">Request <span class="arw">→</span></button>
+          </div>
+          <p class="access-msg" id="access-msg" role="status" aria-live="polite"></p>
+          <p class="access-note">Opens your mail client to hello@parallax.ai — nothing is stored here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href="#top" aria-label="Parallax home">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.2" stroke="#F2501C" stroke-width="1.3"/>
+            <path d="M12 1.5V6M12 18v4.5M1.5 12H6M18 12h4.5" stroke="#E9EEF2" stroke-width="1.3"/>
+            <circle cx="14.4" cy="9.6" r="2.1" fill="#63E0D2"/>
+          </svg>
+          <span>PARALLAX</span>
+        </a>
+        <address>
+          Parallax, Inc.<br>
+          Spatial appraisal infrastructure<br>
+          hello@parallax.ai
+        </address>
+      </div>
+      <div>
+        <h4>Products</h4>
+        <ul>
+          <li><a href="#engine">For appraisers</a></li>
+          <li><a href="#lenders">For lenders &amp; AMCs</a></li>
+          <li><a href="#lenders">Parallax Appraisals</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#thesis">Thesis</a></li>
+          <li><a href="#validation">Validation</a></li>
+          <li><a href="#pipeline">How it works</a></li>
+          <li><a href="mailto:hello@parallax.ai">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@parallax.ai">hello@parallax.ai</a></li>
+          <li><a href="#start">Get started</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span class="c">© 2026 Parallax, Inc.</span>
+      <span class="foot-plumb"><span class="ln"></span>DATUM · 29.7604° N&nbsp;95.3698° W</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- nav ---------- */
+  var nav = document.getElementById('nav');
+  var onScroll = function(){ nav.classList.toggle('scrolled', window.scrollY > 12); };
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  var menuBtn = document.getElementById('menubtn');
+  var navlinks = document.getElementById('navlinks');
+  menuBtn.addEventListener('click', function(){
+    var open = navlinks.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true':'false');
+  });
+  navlinks.addEventListener('click', function(e){
+    if(e.target.tagName === 'A'){ navlinks.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
+  });
+
+  /* ---------- reveal + counters ---------- */
+  var revs = document.querySelectorAll('[data-reveal]');
+  var counted = false;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, {threshold:0.14, rootMargin:'0px 0px -8% 0px'});
+  revs.forEach(function(el){ io.observe(el); });
+
+  function animateCount(el){
+    var target = parseFloat(el.getAttribute('data-count'));
+    var dec = parseInt(el.getAttribute('data-dec')||'0',10);
+    if(reduce){ el.textContent = fmt(target,dec); return; }
+    var start = performance.now(), dur = 1100;
+    function tick(now){
+      var p = Math.min(1,(now-start)/dur);
+      var e = 1-Math.pow(1-p,3);
+      el.textContent = fmt(target*e, dec);
+      if(p<1) requestAnimationFrame(tick);
+      else el.textContent = fmt(target,dec);
+    }
+    requestAnimationFrame(tick);
+  }
+  function fmt(v,dec){
+    if(dec>0) return v.toFixed(dec);
+    return Math.round(v).toLocaleString('en-US');
+  }
+  var countEls = document.querySelectorAll('[data-count]');
+  var cio = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ animateCount(en.target); cio.unobserve(en.target); }
+    });
+  }, {threshold:0.6});
+  countEls.forEach(function(el){ cio.observe(el); });
+
+  /* ---------- area ledger <-> plan room highlight ---------- */
+  (function(){
+    var rows = Array.prototype.slice.call(document.querySelectorAll('.lg-row'));
+    if(!rows.length) return;
+    var rooms = {};
+    Array.prototype.forEach.call(document.querySelectorAll('.rm'), function(r){ rooms[r.getAttribute('data-room')] = r; });
+    function set(room, on){
+      var el = rooms[room]; if(el) el.classList.toggle('on', on);
+      rows.forEach(function(rw){ if(rw.getAttribute('data-room')===room) rw.classList.toggle('on', on); });
+    }
+    rows.forEach(function(rw){
+      var room = rw.getAttribute('data-room');
+      rw.addEventListener('mouseenter', function(){ set(room, true); });
+      rw.addEventListener('mouseleave', function(){ set(room, false); });
+      rw.addEventListener('focus', function(){ set(room, true); });
+      rw.addEventListener('blur', function(){ set(room, false); });
+    });
+    Object.keys(rooms).forEach(function(room){
+      var el = rooms[room];
+      el.addEventListener('mouseenter', function(){ set(room, true); });
+      el.addEventListener('mouseleave', function(){ set(room, false); });
+    });
+  })();
+
+  /* ---------- access request (role -> mailto) ---------- */
+  (function(){
+    var wrap = document.querySelector('.access'); if(!wrap) return;
+    var role = 'appraiser';
+    var btns = Array.prototype.slice.call(wrap.querySelectorAll('.role-btn'));
+    btns.forEach(function(b){ b.setAttribute('aria-pressed', b.classList.contains('is-on') ? 'true':'false'); });
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        btns.forEach(function(x){ x.classList.remove('is-on'); x.setAttribute('aria-pressed','false'); });
+        b.classList.add('is-on'); b.setAttribute('aria-pressed','true');
+        role = b.getAttribute('data-role');
+      });
+    });
+    var email = document.getElementById('access-email');
+    var go = document.getElementById('access-go');
+    var msg = document.getElementById('access-msg');
+    /* Paste a form endpoint (e.g. a Formspree URL) here to capture leads directly.
+       Leave empty to fall back to opening the visitor's mail client. */
+    var ENDPOINT = '';
+    function valid(x){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x); }
+    function label(){ return (role==='lender') ? 'Lender / AMC' : 'Appraiser'; }
+    function setMsg(t,cls){ msg.textContent=t; msg.className='access-msg'+(cls?' '+cls:''); }
+    function mailto(val){
+      var body='Role: '+label()+'%0D%0AWork email: '+encodeURIComponent(val)+'%0D%0A%0D%0A(Tell us a little about your volume and coverage.)';
+      setMsg('Opening your mail client…','ok');
+      window.location.href='mailto:hello@parallax.ai?subject='+encodeURIComponent('Parallax access — '+label())+'&body='+body;
+    }
+    function submit(){
+      var val=(email.value||'').trim();
+      if(!valid(val)){ setMsg('Enter a valid work email to continue.','err'); email.focus(); return; }
+      if(!ENDPOINT){ mailto(val); return; }
+      go.disabled=true; setMsg('Sending…','');
+      var fd=new FormData();
+      fd.append('email',val); fd.append('role',label()); fd.append('source','parallax-site');
+      fetch(ENDPOINT,{method:'POST',headers:{'Accept':'application/json'},body:fd})
+        .then(function(r){
+          if(r.ok){ setMsg('Thanks — we\u2019ll be in touch shortly.','ok'); email.value=''; }
+          else{ setMsg('Something went wrong. Email hello@parallax.ai instead.','err'); }
+        })
+        .catch(function(){ setMsg('Network error. Email hello@parallax.ai instead.','err'); })
+        .then(function(){ go.disabled=false; });
+    }
+    go.addEventListener('click', submit);
+    email.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+  })();
+
+  /* ---------- validation scatter ---------- */
+  (function(){
+    var svg = document.getElementById('valid-svg');
+    if(!svg) return;
+    /* [record, measured, flag] — illustrative 44-home sample (records under-report) */
+    var DATA = [[1446,1488,1],[1152,1156],[2727,2816],[1368,1434],[1780,1790],[2425,2496],[1757,1830],[1338,1342],[2857,2958],[1863,1890],[2291,2372],[2232,2350],[1911,2022],[1900,1976],[1432,1484],[1076,1104],[2869,2902],[1416,1458],[1486,1542],[2396,2522],[1090,1092],[2657,2726],[1980,2022],[2222,2230],[1131,1140],[2707,2862],[1149,1168],[2581,2648],[2091,2126],[2244,2372],[1651,1672],[2510,2560],[2486,2596],[2090,2150],[1855,1858],[1550,1562],[2074,2078],[2553,2652],[2778,2698],[1142,1188],[1300,1320],[1122,1148],[1953,2056],[2042,2072]];
+    var MIN=1000, MAX=3000, L=66, R=22, T=24, B=54, VW=640, VH=470;
+    var pw=VW-L-R, ph=VH-T-B;
+    function sx(v){ return L + (v-MIN)/(MAX-MIN)*pw; }
+    function sy(v){ return T + (1-(v-MIN)/(MAX-MIN))*ph; }
+    function k(v){ return (v/1000).toFixed(1)+'k'; }
+    var ticks=[1000,1500,2000,2500,3000];
+    var s='';
+    /* region where measured > record */
+    s+='<polygon class="v-region" points="'+sx(MIN)+','+sy(MIN)+' '+sx(MAX)+','+sy(MAX)+' '+sx(MIN)+','+sy(MAX)+'"/>';
+    /* grid */
+    ticks.forEach(function(t){
+      if(t>MIN&&t<MAX){
+        s+='<line class="v-grid" x1="'+sx(t)+'" y1="'+T+'" x2="'+sx(t)+'" y2="'+sy(MIN)+'"/>';
+        s+='<line class="v-grid" x1="'+L+'" y1="'+sy(t)+'" x2="'+sx(MAX)+'" y2="'+sy(t)+'"/>';
+      }
+    });
+    /* reference line record = measured */
+    s+='<line class="v-ref" x1="'+sx(MIN)+'" y1="'+sy(MIN)+'" x2="'+sx(MAX)+'" y2="'+sy(MAX)+'"/>';
+    s+='<text class="v-reflab" x="'+(sx(MAX)-4)+'" y="'+(sy(MAX)+13)+'" text-anchor="end">record = measured</text>';
+    s+='<text class="v-regionlab" x="'+(L+10)+'" y="'+(T+16)+'">\u2191 record reads low</text>';
+    /* axes */
+    s+='<line class="v-axis" x1="'+L+'" y1="'+sy(MIN)+'" x2="'+sx(MAX)+'" y2="'+sy(MIN)+'"/>';
+    s+='<line class="v-axis" x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+sy(MIN)+'"/>';
+    /* ticks + labels */
+    ticks.forEach(function(t){
+      s+='<text class="v-tick" x="'+sx(t)+'" y="'+(sy(MIN)+18)+'" text-anchor="middle">'+k(t)+'</text>';
+      s+='<text class="v-tick" x="'+(L-9)+'" y="'+(sy(t)+3.5)+'" text-anchor="end">'+k(t)+'</text>';
+    });
+    /* axis titles */
+    s+='<text class="v-atitle" x="'+(L+pw/2)+'" y="'+(VH-8)+'" text-anchor="middle">County record (sf)</text>';
+    s+='<text class="v-atitle" transform="translate('+(14)+','+(T+ph/2)+') rotate(-90)" text-anchor="middle">Measured GLA (sf)</text>';
+    /* points */
+    DATA.forEach(function(d,i){
+      var flag=d[2]===1;
+      s+='<circle class="vpt'+(flag?' flag':'')+'" data-i="'+i+'" data-rec="'+d[0]+'" data-meas="'+d[1]+'" cx="'+sx(d[0]).toFixed(1)+'" cy="'+sy(d[1]).toFixed(1)+'" r="'+(flag?6:4.2)+'"/>';
+    });
+    svg.innerHTML=s;
+
+    /* accessible data table */
+    var tbl=document.getElementById('valid-table');
+    if(tbl){
+      var h='<table><caption>Validation sample: county-record vs. Parallax-measured gross living area, 44 homes (illustrative).</caption><thead><tr><th>#</th><th>County record (sf)</th><th>Measured (sf)</th><th>Difference (sf)</th></tr></thead><tbody>';
+      DATA.forEach(function(d,i){ h+='<tr><td>'+(i+1)+'</td><td>'+d[0]+'</td><td>'+d[1]+'</td><td>'+((d[1]-d[0])>=0?'+':'')+(d[1]-d[0])+'</td></tr>'; });
+      h+='</tbody></table>';
+      tbl.innerHTML=h;
+    }
+
+    /* tooltip */
+    var frame=svg.parentNode, tip=document.getElementById('vc-tip');
+    function show(c){
+      var f=frame.getBoundingClientRect(), b=c.getBoundingClientRect();
+      var rec=+c.getAttribute('data-rec'), meas=+c.getAttribute('data-meas');
+      var diff=meas-rec, p=diff/rec*100, sg=diff>=0?'+':'\u2212';
+      tip.innerHTML='<b>'+meas.toLocaleString()+' sf</b> measured<br>'+rec.toLocaleString()+' sf record &middot; <span class="up">'+sg+Math.abs(diff)+' ('+sg+Math.abs(p).toFixed(1)+'%)</span>';
+      tip.style.left=(b.left+b.width/2-f.left)+'px';
+      tip.style.top=(b.top-f.top)+'px';
+      tip.hidden=false;
+    }
+    Array.prototype.forEach.call(svg.querySelectorAll('.vpt'), function(c){
+      c.addEventListener('mouseenter', function(){ show(c); });
+      c.addEventListener('mouseleave', function(){ tip.hidden=true; });
+    });
+
+    /* staggered reveal (skips motion when reduced) */
+    if(!reduce){
+      svg.classList.add('reveal-pts');
+      var pts=svg.querySelectorAll('.vpt');
+      var vio=new IntersectionObserver(function(ents){
+        ents.forEach(function(en){
+          if(en.isIntersecting){
+            Array.prototype.forEach.call(pts, function(c,i){
+              c.style.transitionDelay=Math.min(i*15,650)+'ms';
+              c.classList.add('in');
+            });
+            vio.disconnect();
+          }
+        });
+      }, {threshold:0.25});
+      vio.observe(svg);
+    }
+  })();
+
+  /* ---------- point cloud hero ---------- */
+  var canvas = document.getElementById('scan-canvas');
+  var fallback = document.getElementById('scan-fallback');
+  var readout = document.getElementById('scan-readout');
+  var hint = document.getElementById('scan-hint');
+
+  if(typeof THREE === 'undefined' || !canvas){
+    if(fallback) fallback.style.display = 'block';
+    if(canvas) canvas.style.display = 'none';
+    return;
+  }
+  fallback.style.display = 'none';
+
+  try{
+    /* ----- build house geometry (points + wire edges) ----- */
+    var pts = [];
+    var edges = [];
+    function v(x,y,z){ return {x:x,y:y,z:z}; }
+    function addEdge(a,b){ edges.push(a.x,a.y,a.z, b.x,b.y,b.z); }
+    function sampleTri(a,b,c,density){
+      var abx=b.x-a.x, aby=b.y-a.y, abz=b.z-a.z;
+      var acx=c.x-a.x, acy=c.y-a.y, acz=c.z-a.z;
+      var cx=aby*acz-abz*acy, cy=abz*acx-abx*acz, cz=abx*acy-aby*acx;
+      var area=0.5*Math.sqrt(cx*cx+cy*cy+cz*cz);
+      var n=Math.max(2, Math.round(area*density));
+      for(var i=0;i<n;i++){
+        var u=Math.random(), w=Math.random();
+        if(u+w>1){ u=1-u; w=1-w; }
+        pts.push({ x:a.x+abx*u+acx*w, y:a.y+aby*u+acy*w, z:a.z+abz*u+acz*w });
+      }
+    }
+    function quad(a,b,c,d,dn,wire){
+      sampleTri(a,b,c,dn); sampleTri(a,c,d,dn);
+      if(wire!==false){ addEdge(a,b);addEdge(b,c);addEdge(c,d);addEdge(d,a); }
+    }
+    function tri(a,b,c,dn,wire){
+      sampleTri(a,b,c,dn);
+      if(wire!==false){ addEdge(a,b);addEdge(b,c);addEdge(c,a); }
+    }
+
+    var DN = (window.innerWidth < 760) ? 132 : 240;
+    /* main block */
+    var W=3.0, D=2.2, H=1.55, RH=0.95;
+    var x0=-W/2, x1=W/2, z0=-D/2, z1=D/2;
+    var A=v(x0,0,z1),B=v(x1,0,z1),C=v(x1,H,z1),Dp=v(x0,H,z1);
+    var A2=v(x0,0,z0),B2=v(x1,0,z0),C2=v(x1,H,z0),D2=v(x0,H,z0);
+    quad(A,B,C,Dp,DN);          /* front */
+    quad(B2,A2,D2,C2,DN);       /* back  */
+    quad(A2,A,Dp,D2,DN);        /* left  */
+    quad(B,B2,C2,C,DN);         /* right */
+    var apexL=v(x0,H+RH,0), apexR=v(x1,H+RH,0);
+    tri(D2,Dp,apexL,DN);        /* left gable  */
+    tri(C,C2,apexR,DN);         /* right gable */
+    quad(Dp,C,apexR,apexL,DN);  /* roof +z */
+    quad(C2,D2,apexL,apexR,DN); /* roof -z */
+    addEdge(apexL,apexR);
+
+    /* attached garage on +x */
+    var gx0=x1, gx1=x1+1.35, gz1=z1, gz0=z1-1.6, gh=1.05, grh=0.42;
+    var gzc=(gz0+gz1)/2;
+    var gA=v(gx0,0,gz1),gB=v(gx1,0,gz1),gC=v(gx1,gh,gz1),gD=v(gx0,gh,gz1);
+    var gA2=v(gx0,0,gz0),gB2=v(gx1,0,gz0),gC2=v(gx1,gh,gz0),gD2=v(gx0,gh,gz0);
+    quad(gA,gB,gC,gD,DN);       /* front */
+    quad(gB,gB2,gC2,gC,DN);     /* right */
+    quad(gB2,gA2,gD2,gC2,DN);   /* back  */
+    var gApL=v(gx0,gh+grh,gzc), gApR=v(gx1,gh+grh,gzc);
+    tri(gD,gD2,gApL,DN); tri(gC,gC2,gApR,DN);
+    quad(gD,gC,gApR,gApL,DN); quad(gC2,gD2,gApL,gApR,DN);
+    addEdge(gApL,gApR);
+
+    /* ----- buffers ----- */
+    var N = pts.length;
+    var positions = new Float32Array(N*3);
+    var targets   = new Float32Array(N*3);
+    var offsets   = new Float32Array(N*3);
+    var colors    = new Float32Array(N*3);
+    var yMin=Infinity,yMax=-Infinity, i, p;
+    for(i=0;i<N;i++){ p=pts[i]; if(p.y<yMin)yMin=p.y; if(p.y>yMax)yMax=p.y; }
+    var cLow=new THREE.Color('#1c6e69'), cMid=new THREE.Color('#4fd0c4'), cHigh=new THREE.Color('#e0fbf6'), tmp=new THREE.Color();
+    for(i=0;i<N;i++){
+      p=pts[i];
+      targets[i*3]=p.x; targets[i*3+1]=p.y; targets[i*3+2]=p.z;
+      var t=(p.y-yMin)/Math.max(0.001,(yMax-yMin));
+      t=Math.min(1,Math.max(0,t+(Math.random()-0.5)*0.08));
+      if(t<0.5){ tmp.copy(cLow).lerp(cMid,t/0.5); } else { tmp.copy(cMid).lerp(cHigh,(t-0.5)/0.5); }
+      var br=0.82+Math.random()*0.18;
+      colors[i*3]=tmp.r*br; colors[i*3+1]=tmp.g*br; colors[i*3+2]=tmp.b*br;
+      var r=2.0+Math.random()*2.6, aa=Math.random()*Math.PI*2, ee=(Math.random()-0.5)*Math.PI;
+      offsets[i*3]=Math.cos(aa)*Math.cos(ee)*r;
+      offsets[i*3+1]=Math.sin(ee)*r+1.4;
+      offsets[i*3+2]=Math.sin(aa)*Math.cos(ee)*r;
+      if(reduce){ positions[i*3]=p.x; positions[i*3+1]=p.y; positions[i*3+2]=p.z; }
+      else { positions[i*3]=p.x+offsets[i*3]; positions[i*3+1]=p.y+offsets[i*3+1]; positions[i*3+2]=p.z+offsets[i*3+2]; }
+    }
+
+    /* round sprite */
+    function dotTex(){
+      var c=document.createElement('canvas'); c.width=c.height=64;
+      var g=c.getContext('2d');
+      var grd=g.createRadialGradient(32,32,0,32,32,32);
+      grd.addColorStop(0,'rgba(255,255,255,1)');
+      grd.addColorStop(0.4,'rgba(255,255,255,0.8)');
+      grd.addColorStop(1,'rgba(255,255,255,0)');
+      g.fillStyle=grd; g.beginPath(); g.arc(32,32,32,0,Math.PI*2); g.fill();
+      return new THREE.CanvasTexture(c);
+    }
+
+    var geo=new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+    var mat=new THREE.PointsMaterial({ size:0.05, map:dotTex(), vertexColors:true, transparent:true, depthWrite:false, opacity:0.96, sizeAttenuation:true });
+    var cloud=new THREE.Points(geo,mat);
+
+    var egeo=new THREE.BufferGeometry();
+    egeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(edges),3));
+    var emat=new THREE.LineBasicMaterial({ color:new THREE.Color('#5f9296'), transparent:true, opacity:0.16, depthWrite:false });
+    var wire=new THREE.LineSegments(egeo,emat);
+
+    var group=new THREE.Group();
+    group.add(cloud); group.add(wire);
+    group.position.x = -((gx1)+(x0))/2;   /* recenter x across house+garage */
+
+    var scene=new THREE.Scene();
+    scene.add(group);
+
+    var grid=new THREE.GridHelper(12,24, new THREE.Color('#31444a'), new THREE.Color('#1b262a'));
+    grid.material.transparent=true; grid.material.opacity=0.32; grid.position.y=0.002;
+    scene.add(grid);
+
+    var camera=new THREE.PerspectiveCamera(34,1,0.1,100);
+    var target=new THREE.Vector3(0,(yMin+yMax)*0.42,0);
+    var renderer=new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true });
+    renderer.setClearColor(0x000000,0);
+
+    function resize(){
+      var r=canvas.getBoundingClientRect();
+      var w=Math.max(1,r.width), h=Math.max(1,r.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+      renderer.setSize(w,h,false);
+      camera.aspect=w/h; camera.updateProjectionMatrix();
+    }
+
+    var st={ az:0.8, el:0.28, taz:0.8, tel:0.28, drag:false, px:0, py:0, vaz:0, auto:true, dist:6.7, p:(reduce?1:0) };
+    var resumeTimer=null;
+    function updateCam(){
+      var el=Math.max(0.05,Math.min(1.18,st.el));
+      camera.position.set(
+        target.x + st.dist*Math.cos(el)*Math.sin(st.az),
+        target.y + st.dist*Math.sin(el),
+        target.z + st.dist*Math.cos(el)*Math.cos(st.az)
+      );
+      camera.lookAt(target);
+    }
+
+    canvas.style.touchAction='none';
+    canvas.addEventListener('pointerdown', function(e){
+      st.drag=true; st.auto=false; st.px=e.clientX; st.py=e.clientY;
+      if(hint) hint.classList.add('hide');
+      if(resumeTimer) clearTimeout(resumeTimer);
+      try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    window.addEventListener('pointermove', function(e){
+      if(!st.drag) return;
+      var dx=e.clientX-st.px, dy=e.clientY-st.py;
+      st.px=e.clientX; st.py=e.clientY;
+      st.taz -= dx*0.006; st.tel += dy*0.005; st.vaz = -dx*0.006;
+    });
+    window.addEventListener('pointerup', function(){
+      if(!st.drag) return;
+      st.drag=false;
+      if(resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer=setTimeout(function(){ st.auto=true; }, 3500);
+    });
+
+    /* keyboard rotation (focusable canvas) */
+    canvas.addEventListener('keydown', function(e){
+      var step=0.2, used=true;
+      switch(e.key){
+        case 'ArrowLeft':  st.taz += step; break;
+        case 'ArrowRight': st.taz -= step; break;
+        case 'ArrowUp':    st.tel = Math.min(1.15, st.tel + step*0.55); break;
+        case 'ArrowDown':  st.tel = Math.max(0.05, st.tel - step*0.55); break;
+        default: used=false;
+      }
+      if(used){
+        e.preventDefault();
+        st.auto=false; st.vaz=0;
+        if(hint) hint.classList.add('hide');
+        if(resumeTimer) clearTimeout(resumeTimer);
+        resumeTimer=setTimeout(function(){ st.auto=true; }, 4500);
+      }
+    });
+    canvas.addEventListener('focus', function(){ if(hint) hint.classList.add('hide'); });
+
+    var last=performance.now(), fc=0;
+    function loop(now){
+      requestAnimationFrame(loop);
+      var dt=Math.min(50, now-last); last=now;
+      if(st.p<1){
+        st.p=Math.min(1, st.p + dt/1400);
+        var e2=1-Math.pow(1-st.p,3), j;
+        for(j=0;j<N;j++){
+          positions[j*3]  =targets[j*3]  +offsets[j*3]  *(1-e2);
+          positions[j*3+1]=targets[j*3+1]+offsets[j*3+1]*(1-e2);
+          positions[j*3+2]=targets[j*3+2]+offsets[j*3+2]*(1-e2);
+        }
+        geo.attributes.position.needsUpdate=true;
+      }
+      if(st.auto && !st.drag){ st.taz += 0.0022*dt/16.67; }
+      if(!st.drag && Math.abs(st.vaz)>0.0001){ st.taz += st.vaz; st.vaz*=0.92; }
+      st.tel=Math.max(0.05,Math.min(1.15,st.tel));
+      st.az += (st.taz-st.az)*0.12;
+      st.el += (st.tel-st.el)*0.12;
+      updateCam();
+      renderer.render(scene,camera);
+      if(readout && (++fc % 5 === 0)){
+        var azd=((st.az*180/Math.PI)%360+360)%360;
+        var eld=st.el*180/Math.PI;
+        readout.innerHTML='AZ '+('00'+Math.round(azd)).slice(-3)+'°<br>EL '+('0'+Math.round(eld)).slice(-2)+'°';
+      }
+    }
+
+    var ro=new ResizeObserver(resize); ro.observe(canvas);
+    resize(); updateCam(); requestAnimationFrame(loop);
+  } catch(err){
+    if(fallback) fallback.style.display='block';
+    if(canvas) canvas.style.display='none';
+  }
+})();
+</script>
+</body>
+</html>
